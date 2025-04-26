@@ -1,12 +1,12 @@
 {
-    "name": "yourname/laravel-price-formatter",
+    "name": "moahmedmish/laravel-price-formatter",
     "description": "A Laravel package for formatting prices based on country code and language",
     "type": "library",
     "license": "MIT",
     "authors": [
         {
-            "name": "Your Name",
-            "email": "your.email@example.com"
+            "name": "Mohamed",
+            "email": "developper.mohamed@gmail.com"
         }
     ],
     "require": {
@@ -19,21 +19,21 @@
     },
     "autoload": {
         "psr-4": {
-            "YourName\\PriceFormatter\\": "src/"
+            "MoahmedMish\\PriceFormatter\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "YourName\\PriceFormatter\\Tests\\": "tests/"
+            "MoahmedMish\\PriceFormatter\\Tests\\": "tests/"
         }
     },
     "extra": {
         "laravel": {
             "providers": [
-                "YourName\\PriceFormatter\\PriceFormatterServiceProvider"
+                "MoahmedMish\\PriceFormatter\\PriceFormatterServiceProvider"
             ],
             "aliases": {
-                "PriceFormatter": "YourName\\PriceFormatter\\Facades\\PriceFormatter"
+                "PriceFormatter": "MoahmedMish\\PriceFormatter\\Facades\\PriceFormatter"
             }
         }
     },

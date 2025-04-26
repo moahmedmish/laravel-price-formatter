@@ -17,7 +17,7 @@ A Laravel package for formatting prices based on country code and language. This
 You can install the package via composer:
 
 ```bash
-composer require yourname/laravel-price-formatter
+composer require moahmedmish/laravel-price-formatter
 ```
 
 The package will automatically register its service provider.
@@ -25,7 +25,7 @@ The package will automatically register its service provider.
 You can publish the configuration file with:
 
 ```bash
-php artisan vendor:publish --provider="YourName\PriceFormatter\PriceFormatterServiceProvider" --tag="config"
+php artisan vendor:publish --provider="MoahmedMish\PriceFormatter\PriceFormatterServiceProvider" --tag="config"
 ```
 
 ## Usage
