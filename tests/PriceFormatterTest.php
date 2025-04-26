@@ -1,10 +1,11 @@
 <?php
 
-namespace YourName\PriceFormatter\Tests;
+namespace MoahmedMish\PriceFormatter\Tests;
 
 use Orchestra\Testbench\TestCase;
-use YourName\PriceFormatter\PriceFormatterServiceProvider;
-use YourName\PriceFormatter\Facades\PriceFormatter;
+use MoahmedMish\PriceFormatter\PriceFormatterServiceProvider;
+use MoahmedMish\PriceFormatter\Facades\PriceFormatter;
+use MoahmedMish\PriceFormatter\Exceptions\InvalidRoundingModeException;
 
 class PriceFormatterTest extends TestCase
 {
@@ -205,5 +206,95 @@ class PriceFormatterTest extends TestCase
     {
         $formatted = PriceFormatter::format(1234567.89, 'EG', 'ar');
         $this->assertEquals('١٬٢٣٤٬٥٦٧٫٨٩ ج م', $formatted);
+    }
+
+    /** @test */
+    public function it_formats_using_app_locale()
+    {
+        $this->app['config']->set('app.locale', 'ar');
+        $this->app['config']->set('price-formatter.locale.use_app_locale', true);
+        $this->app['config']->set('price-formatter.locale.locale_to_country_map', ['ar' => 'EG']);
+        
+        $formatted = PriceFormatter::formatLocalized(5);
+        $this->assertEquals('٥ ج م', $formatted);
+    }
+
+    /** @test */
+    public function it_formats_with_accounting_format()
+    {
+        $formatted = PriceFormatter::formatAccounting(-10.50, 'US', 'en');
+        $this->assertEquals('($10.50)', $formatted);
+    }
+
+    /** @test */
+    public function it_formats_with_compact_notation()
+    {
+        $formatted = PriceFormatter::formatCompact(1500, 'US', 'en');
+        $this->assertEquals('$1.5K', $formatted);
+        
+        $formatted = PriceFormatter::formatCompact(1500000, 'US', 'en');
+        $this->assertEquals('$1.5M', $formatted);
+        
+        $formatted = PriceFormatter::formatCompact(1500000000, 'US', 'en');
+        $this->assertEquals('$1.5B', $formatted);
+    }
+
+    /** @test */
+    public function it_formats_percentages()
+    {
+        $formatted = PriceFormatter::formatPercentage(0.255, 1);
+        $this->assertEquals('25.5%', $formatted);
+    }
+
+    /** @test */
+    public function it_applies_different_rounding_modes()
+    {
+        // Test ceil rounding
+        $this->app['config']->set('price-formatter.default.rounding_mode', 'ceil');
+        $formatted = PriceFormatter::format(10.001, 'US', 'en');
+        $this->assertEquals('$10.01', $formatted);
+        
+        // Test floor rounding
+        $this->app['config']->set('price-formatter.default.rounding_mode', 'floor');
+        $formatted = PriceFormatter::format(10.999, 'US', 'en');
+        $this->assertEquals('$10.99', $formatted);
+        
+        // Test half_up rounding
+        $this->app['config']->set('price-formatter.default.rounding_mode', 'half_up');
+        $formatted = PriceFormatter::format(10.505, 'US', 'en');
+        $this->assertEquals('$10.51', $formatted);
+        
+        // Test half_down rounding
+        $this->app['config']->set('price-formatter.default.rounding_mode', 'half_down');
+        $formatted = PriceFormatter::format(10.505, 'US', 'en');
+        $this->assertEquals('$10.50', $formatted);
+    }
+
+    /** @test */
+    public function it_throws_exception_for_invalid_rounding_mode()
+    {
+        $this->expectException(InvalidRoundingModeException::class);
+        
+        $this->app['config']->set('price-formatter.default.rounding_mode', 'invalid_mode');
+        PriceFormatter::format(10.50, 'US', 'en');
+    }
+
+    /** @test */
+    public function it_can_format_cryptocurrency()
+    {
+        $this->app['config']->set('price-formatter.currencies.BTC', [
+            'code' => 'BTC',
+            'formats' => [
+                'en' => [
+                    'symbol' => '₿',
+                    'position' => 'before',
+                    'separator' => '',
+                    'decimals' => 8,
+                ],
+            ],
+        ]);
+        
+        $formatted = PriceFormatter::format(0.00012345, 'BTC', 'en');
+        $this->assertEquals('₿0.00012345', $formatted);
     }
 }
