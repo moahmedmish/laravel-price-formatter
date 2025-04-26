@@ -39,7 +39,7 @@ class PriceFormatterTest extends TestCase
     public function it_formats_egyptian_pounds_in_arabic()
     {
         $formatted = PriceFormatter::format(5, 'EG', 'ar');
-        $this->assertEquals('5 ج م', $formatted);
+        $this->assertEquals('٥ ج م', $formatted);
     }
 
     /** @test */
@@ -53,7 +53,7 @@ class PriceFormatterTest extends TestCase
     public function it_formats_us_dollars_in_arabic()
     {
         $formatted = PriceFormatter::format(10.50, 'US', 'ar');
-        $this->assertEquals('10.50 دولار', $formatted);
+        $this->assertEquals('١٠٫٥٠ دولار', $formatted);
     }
 
     /** @test */
@@ -156,5 +156,54 @@ class PriceFormatterTest extends TestCase
         
         // Clean up
         @unlink($tempFile);
+    }
+
+    /** @test */
+    public function it_uses_eastern_arabic_numerals_for_arabic_language()
+    {
+        $formatted = PriceFormatter::format(1234.56, 'EG', 'ar');
+        $this->assertEquals('١٢٣٤٫٥٦ ج م', $formatted);
+    }
+
+    /** @test */
+    public function it_uses_western_arabic_numerals_for_english_language()
+    {
+        $formatted = PriceFormatter::format(1234.56, 'EG', 'en');
+        $this->assertEquals('1,234.56 LE', $formatted);
+    }
+
+    /** @test */
+    public function it_can_force_eastern_arabic_numerals_for_all_languages()
+    {
+        $this->app['config']->set('price-formatter.numerals.force_eastern_arabic', true);
+        
+        $formatted = PriceFormatter::format(1234.56, 'US', 'en');
+        $this->assertEquals('$١٢٣٤٫٥٦', $formatted);
+    }
+
+    /** @test */
+    public function it_can_force_western_arabic_numerals_for_arabic_language()
+    {
+        $this->app['config']->set('price-formatter.numerals.force_western_arabic', true);
+        
+        $formatted = PriceFormatter::format(1234.56, 'EG', 'ar');
+        $this->assertEquals('1,234.56 ج م', $formatted);
+    }
+
+    /** @test */
+    public function it_respects_language_specific_numeral_settings()
+    {
+        // Override the default behavior for Arabic
+        $this->app['config']->set('price-formatter.currencies.EG.formats.ar.use_eastern_arabic_numerals', false);
+        
+        $formatted = PriceFormatter::format(1234.56, 'EG', 'ar');
+        $this->assertEquals('1,234.56 ج م', $formatted);
+    }
+
+    /** @test */
+    public function it_converts_decimal_and_thousand_separators_correctly()
+    {
+        $formatted = PriceFormatter::format(1234567.89, 'EG', 'ar');
+        $this->assertEquals('١٬٢٣٤٬٥٦٧٫٨٩ ج م', $formatted);
     }
 }

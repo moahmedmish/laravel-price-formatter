@@ -12,6 +12,26 @@ class PriceFormatter
     protected $allCurrencies = null;
 
     /**
+     * Eastern Arabic numerals mapping
+     *
+     * @var array
+     */
+    protected $easternArabicNumerals = [
+        '0' => '٠',
+        '1' => '١',
+        '2' => '٢',
+        '3' => '٣',
+        '4' => '٤',
+        '5' => '٥',
+        '6' => '٦',
+        '7' => '٧',
+        '8' => '٨',
+        '9' => '٩',
+        '.' => '٫',
+        ',' => '٬',
+    ];
+
+    /**
      * Format a price based on country code and language
      *
      * @param float $amount The price amount
@@ -46,7 +66,7 @@ class PriceFormatter
         
         if (!$countrySettings) {
             // If country not found, use default formatting
-            return $this->applyFormatting($amount, $defaultSettings);
+            return $this->applyFormatting($amount, $defaultSettings, $language);
         }
         
         // Get language-specific format if available
@@ -58,14 +78,14 @@ class PriceFormatter
             
             // If still not found, use default formatting
             if (!$formatSettings) {
-                return $this->applyFormatting($amount, $defaultSettings);
+                return $this->applyFormatting($amount, $defaultSettings, $language);
             }
         }
         
         // Merge country-language specific settings with defaults
         $settings = array_merge($defaultSettings, $formatSettings);
         
-        return $this->applyFormatting($amount, $settings);
+        return $this->applyFormatting($amount, $settings, $language);
     }
     
     /**
@@ -73,9 +93,10 @@ class PriceFormatter
      *
      * @param float $amount
      * @param array $settings
+     * @param string $language
      * @return string
      */
-    protected function applyFormatting($amount, $settings)
+    protected function applyFormatting($amount, $settings, $language = 'en')
     {
         // Format the number with decimal and thousand separators
         $formattedNumber = number_format(
@@ -85,12 +106,50 @@ class PriceFormatter
             $settings['thousand_separator'] ?? ','
         );
         
+        // Convert to Eastern Arabic numerals if needed
+        if (($settings['use_eastern_arabic_numerals'] ?? false) || 
+            (($language === 'ar' || $language === 'fa' || $language === 'ur') && 
+             ($settings['use_eastern_arabic_numerals'] ?? null) !== false)) {
+            $formattedNumber = $this->convertToEasternArabicNumerals($formattedNumber, $settings);
+        }
+        
         // Apply symbol based on position
         if (($settings['position'] ?? 'before') === 'before') {
             return $settings['symbol'] . ($settings['separator'] ?? '') . $formattedNumber;
         } else {
             return $formattedNumber . ($settings['separator'] ?? '') . $settings['symbol'];
         }
+    }
+    
+    /**
+     * Convert Western Arabic numerals to Eastern Arabic numerals
+     *
+     * @param string $number
+     * @param array $settings
+     * @return string
+     */
+    protected function convertToEasternArabicNumerals($number, $settings)
+    {
+        $decimalSeparator = $settings['decimal_separator'] ?? '.';
+        $thousandSeparator = $settings['thousand_separator'] ?? ',';
+        
+        // Replace decimal and thousand separators
+        if ($decimalSeparator === '.') {
+            $number = str_replace('.', '٫', $number);
+        } else {
+            $number = str_replace($decimalSeparator, '٫', $number);
+        }
+        
+        if ($thousandSeparator === ',') {
+            $number = str_replace(',', '٬', $number);
+        } else {
+            $number = str_replace($thousandSeparator, '٬', $number);
+        }
+        
+        // Replace digits
+        $number = strtr($number, $this->easternArabicNumerals);
+        
+        return $number;
     }
     
     /**
@@ -218,6 +277,7 @@ class PriceFormatter
             'symbol' => $currency['symbol']['native'] ?? $currencyCode,
             'position' => 'after',
             'separator' => ' ',
+            'use_eastern_arabic_numerals' => $language === 'ar' || $language === 'fa' || $language === 'ur',
         ];
         
         // Language-specific format if available

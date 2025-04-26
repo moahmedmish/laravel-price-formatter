@@ -25,6 +25,7 @@ return [
                     'symbol' => 'ج م',
                     'position' => 'after',
                     'separator' => ' ',
+                    'use_eastern_arabic_numerals' => true,
                 ],
             ],
         ],
@@ -40,6 +41,7 @@ return [
                     'symbol' => 'دولار',
                     'position' => 'after',
                     'separator' => ' ',
+                    'use_eastern_arabic_numerals' => true,
                 ],
             ],
         ],
@@ -55,6 +57,7 @@ return [
                     'symbol' => 'جنيه استرليني',
                     'position' => 'after',
                     'separator' => ' ',
+                    'use_eastern_arabic_numerals' => true,
                 ],
             ],
         ],
@@ -70,6 +73,7 @@ return [
                     'symbol' => 'يورو',
                     'position' => 'after',
                     'separator' => ' ',
+                    'use_eastern_arabic_numerals' => true,
                 ],
             ],
         ],
@@ -85,6 +89,7 @@ return [
                     'symbol' => 'ر.س',
                     'position' => 'after',
                     'separator' => ' ',
+                    'use_eastern_arabic_numerals' => true,
                 ],
             ],
         ],
@@ -100,6 +105,7 @@ return [
                     'symbol' => 'د.إ',
                     'position' => 'after',
                     'separator' => ' ',
+                    'use_eastern_arabic_numerals' => true,
                 ],
             ],
         ],
@@ -120,6 +126,24 @@ return [
         'decimal_separator' => '.',
         'thousand_separator' => ',',
         'decimals' => 2,
+        'use_eastern_arabic_numerals' => false, // Set to true to use Eastern Arabic numerals (١٢٣) by default
+    ],
+    
+    /*
+    |--------------------------------------------------------------------------
+    | Numeral Format Settings
+    |--------------------------------------------------------------------------
+    |
+    | Settings for numeral formatting across different languages
+    |
+    */
+    'numerals' => [
+        // Automatically use Eastern Arabic numerals for these languages
+        'eastern_arabic_languages' => ['ar', 'fa', 'ur'],
+        
+        // Override automatic language detection
+        'force_eastern_arabic' => false, // Set to true to force Eastern Arabic numerals for all languages
+        'force_western_arabic' => false, // Set to true to force Western Arabic numerals for all languages
     ],
     
     /*

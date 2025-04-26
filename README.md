@@ -7,6 +7,7 @@ A Laravel package for formatting prices based on country code and language. This
 - Format prices based on country code and language
 - Support for all world currencies with ISO 4217 codes
 - Customizable formatting options (symbol position, separators, decimals)
+- Support for Eastern Arabic numerals (١٢٣) for Arabic, Farsi, and Urdu languages
 - Easy to use with Laravel Facade
 - Fully configurable through config file
 - Support for custom currency configurations
@@ -38,7 +39,7 @@ $formattedPrice = PriceFormatter::format(5, 'EG', 'en');
 
 // Format a price for Arabic language
 $formattedPrice = PriceFormatter::format(5, 'EG', 'ar');
-// Returns: "5 ج م"
+// Returns: "٥ ج م" (with Eastern Arabic numerals)
 ```
 
 ### Helper Methods
@@ -74,6 +75,7 @@ return [
                     'symbol' => 'ج م',
                     'position' => 'after',
                     'separator' => ' ',
+                    'use_eastern_arabic_numerals' => true, // Use Eastern Arabic numerals (١٢٣)
                 ],
             ],
         ],
@@ -87,11 +89,53 @@ return [
         'decimal_separator' => '.',
         'thousand_separator' => ',',
         'decimals' => 2,
+        'use_eastern_arabic_numerals' => false, // Set to true to use Eastern Arabic numerals by default
+    ],
+    
+    'numerals' => [
+        // Automatically use Eastern Arabic numerals for these languages
+        'eastern_arabic_languages' => ['ar', 'fa', 'ur'],
+        
+        // Override automatic language detection
+        'force_eastern_arabic' => false, // Set to true to force Eastern Arabic numerals for all languages
+        'force_western_arabic' => false, // Set to true to force Western Arabic numerals for all languages
     ],
     
     // Path to custom currencies configuration file
     'custom_currencies_path' => null,
 ];
+```
+
+### Eastern Arabic Numerals
+
+The package supports Eastern Arabic numerals (١٢٣٤٥٦٧٨٩٠) which are commonly used in Arabic, Farsi, and Urdu languages. By default, the package will automatically use Eastern Arabic numerals when formatting prices for these languages.
+
+You can control this behavior in several ways:
+
+1. **Global default**: Set `use_eastern_arabic_numerals` in the default settings to `true` to use Eastern Arabic numerals for all languages by default.
+
+2. **Language-specific**: Set `use_eastern_arabic_numerals` in the language-specific format settings to override the default behavior for that language.
+
+3. **Force globally**: Use the `force_eastern_arabic` or `force_western_arabic` settings to override all other settings and force a specific numeral format for all languages.
+
+Examples:
+
+```php
+// Force Eastern Arabic numerals for all languages
+'numerals' => [
+    'force_eastern_arabic' => true,
+],
+
+// Disable Eastern Arabic numerals for Arabic language
+'currencies' => [
+    'EG' => [
+        'formats' => [
+            'ar' => [
+                'use_eastern_arabic_numerals' => false,
+            ],
+        ],
+    ],
+],
 ```
 
 ### Customizing Currencies
@@ -156,6 +200,12 @@ To add support for a new currency, you can either:
             'position' => 'after',
             'separator' => '',
         ],
+        'ar' => [
+            'symbol' => 'ين',
+            'position' => 'after',
+            'separator' => ' ',
+            'use_eastern_arabic_numerals' => true,
+        ],
     ],
 ],
 ```
@@ -169,6 +219,7 @@ To add support for a new currency, you can either:
   "symbol": {
     "en": "¥",
     "ja": "円",
+    "ar": "ين",
     "native": "¥"
   }
 }
