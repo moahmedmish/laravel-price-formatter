@@ -5,6 +5,13 @@ namespace YourName\PriceFormatter;
 class PriceFormatter
 {
     /**
+     * All world currencies data
+     *
+     * @var array
+     */
+    protected $allCurrencies = null;
+
+    /**
      * Format a price based on country code and language
      *
      * @param float $amount The price amount
@@ -17,11 +24,25 @@ class PriceFormatter
         // Get configuration
         $config = config('price-formatter');
         
+        // Load all currencies if needed
+        $this->loadAllCurrencies();
+        
         // Default formatting settings
         $defaultSettings = $config['default'];
         
         // Get country-specific settings if available
         $countrySettings = $config['currencies'][$countryCode] ?? null;
+        
+        // If country not found in default config, try to find it in all currencies
+        if (!$countrySettings && isset($this->allCurrencies[$countryCode])) {
+            $currencyCode = $this->getCurrencyCodeFromCountry($countryCode);
+            if ($currencyCode) {
+                $countrySettings = [
+                    'code' => $currencyCode,
+                    'formats' => $this->getFormatsForCurrency($currencyCode, $language)
+                ];
+            }
+        }
         
         if (!$countrySettings) {
             // If country not found, use default formatting
@@ -81,7 +102,14 @@ class PriceFormatter
     public function getCurrencyCode($countryCode)
     {
         $config = config('price-formatter');
-        return $config['currencies'][$countryCode]['code'] ?? null;
+        
+        // First check in the config
+        if (isset($config['currencies'][$countryCode]['code'])) {
+            return $config['currencies'][$countryCode]['code'];
+        }
+        
+        // If not found, try to get from all currencies
+        return $this->getCurrencyCodeFromCountry($countryCode);
     }
     
     /**
@@ -95,10 +123,117 @@ class PriceFormatter
     {
         $config = config('price-formatter');
         
-        if (!isset($config['currencies'][$countryCode]['formats'][$language])) {
+        // First check in the config
+        if (isset($config['currencies'][$countryCode]['formats'][$language]['symbol'])) {
+            return $config['currencies'][$countryCode]['formats'][$language]['symbol'];
+        }
+        
+        // If not found, try to get from all currencies
+        $this->loadAllCurrencies();
+        
+        $currencyCode = $this->getCurrencyCodeFromCountry($countryCode);
+        if (!$currencyCode || !isset($this->allCurrencies[$currencyCode])) {
             return null;
         }
         
-        return $config['currencies'][$countryCode]['formats'][$language]['symbol'] ?? null;
+        // Try to get symbol for the specified language
+        if (isset($this->allCurrencies[$currencyCode]['symbol'][$language])) {
+            return $this->allCurrencies[$currencyCode]['symbol'][$language];
+        }
+        
+        // Fallback to native symbol
+        return $this->allCurrencies[$currencyCode]['symbol']['native'] ?? null;
+    }
+    
+    /**
+     * Load all currencies data
+     *
+     * @return void
+     */
+    protected function loadAllCurrencies()
+    {
+        if ($this->allCurrencies !== null) {
+            return;
+        }
+        
+        $config = config('price-formatter');
+        
+        // Start with the built-in currencies data
+        $currenciesPath = __DIR__ . '/../resources/currencies.json';
+        if (file_exists($currenciesPath)) {
+            $this->allCurrencies = json_decode(file_get_contents($currenciesPath), true)['currencies'] ?? [];
+        } else {
+            $this->allCurrencies = [];
+        }
+        
+        // Load custom currencies if path is specified
+        if (!empty($config['custom_currencies_path']) && file_exists($config['custom_currencies_path'])) {
+            $customCurrencies = json_decode(file_get_contents($config['custom_currencies_path']), true);
+            if (is_array($customCurrencies) && isset($customCurrencies['currencies'])) {
+                // Merge custom currencies with built-in ones, giving priority to custom definitions
+                $this->allCurrencies = array_merge($this->allCurrencies, $customCurrencies['currencies']);
+            }
+        }
+    }
+    
+    /**
+     * Get currency code from country code
+     *
+     * @param string $countryCode
+     * @return string|null
+     */
+    protected function getCurrencyCodeFromCountry($countryCode)
+    {
+        $this->loadAllCurrencies();
+        
+        // Look for the country code in all currencies
+        foreach ($this->allCurrencies as $code => $data) {
+            if (isset($data['country']) && $data['country'] === $countryCode) {
+                return $code;
+            }
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Get formats for a currency and language
+     *
+     * @param string $currencyCode
+     * @param string $language
+     * @return array
+     */
+    protected function getFormatsForCurrency($currencyCode, $language)
+    {
+        $this->loadAllCurrencies();
+        
+        if (!isset($this->allCurrencies[$currencyCode])) {
+            return [];
+        }
+        
+        $currency = $this->allCurrencies[$currencyCode];
+        
+        // Default format
+        $format = [
+            'symbol' => $currency['symbol']['native'] ?? $currencyCode,
+            'position' => 'after',
+            'separator' => ' ',
+        ];
+        
+        // Language-specific format if available
+        if (isset($currency['symbol'][$language])) {
+            $format['symbol'] = $currency['symbol'][$language];
+        } elseif (isset($currency['symbol']['en'])) {
+            $format['symbol'] = $currency['symbol']['en'];
+        }
+        
+        // For some common currencies, adjust position
+        $beforeSymbolCurrencies = ['USD', 'GBP', 'EUR', 'JPY', 'CAD', 'AUD', 'NZD', 'HKD', 'SGD'];
+        if (in_array($currencyCode, $beforeSymbolCurrencies)) {
+            $format['position'] = 'before';
+            $format['separator'] = '';
+        }
+        
+        return [$language => $format, 'en' => $format];
     }
 }

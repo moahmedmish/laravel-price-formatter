@@ -18,7 +18,10 @@ class PriceFormatterUnitTest extends TestCase
         $this->app->instance('config', new class {
             public function get($key, $default = null)
             {
-                return require __DIR__ . '/../config/price-formatter.php';
+                if ($key === 'price-formatter') {
+                    return require __DIR__ . '/../config/price-formatter.php';
+                }
+                return $default;
             }
         });
     }
@@ -78,5 +81,46 @@ class PriceFormatterUnitTest extends TestCase
         
         $result = $method->invoke($this->priceFormatter, 1234.56, $settings);
         $this->assertEquals('¥1,235', $result);
+    }
+    
+    /** @test */
+    public function it_loads_all_currencies()
+    {
+        $method = new \ReflectionMethod(PriceFormatter::class, 'loadAllCurrencies');
+        $method->setAccessible(true);
+        $method->invoke($this->priceFormatter);
+        
+        $property = new \ReflectionProperty(PriceFormatter::class, 'allCurrencies');
+        $property->setAccessible(true);
+        $currencies = $property->getValue($this->priceFormatter);
+        
+        $this->assertIsArray($currencies);
+        $this->assertNotEmpty($currencies);
+        $this->assertArrayHasKey('USD', $currencies);
+        $this->assertArrayHasKey('EUR', $currencies);
+        $this->assertArrayHasKey('JPY', $currencies);
+    }
+    
+    /** @test */
+    public function it_gets_currency_code_from_country()
+    {
+        $method = new \ReflectionMethod(PriceFormatter::class, 'getCurrencyCodeFromCountry');
+        $method->setAccessible(true);
+        
+        $result = $method->invoke($this->priceFormatter, 'UNITED STATES');
+        $this->assertEquals('USD', $result);
+    }
+    
+    /** @test */
+    public function it_gets_formats_for_currency()
+    {
+        $method = new \ReflectionMethod(PriceFormatter::class, 'getFormatsForCurrency');
+        $method->setAccessible(true);
+        
+        $result = $method->invoke($this->priceFormatter, 'USD', 'en');
+        $this->assertIsArray($result);
+        $this->assertArrayHasKey('en', $result);
+        $this->assertEquals('$', $result['en']['symbol']);
+        $this->assertEquals('before', $result['en']['position']);
     }
 }

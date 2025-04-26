@@ -83,4 +83,78 @@ class PriceFormatterTest extends TestCase
         $symbol = PriceFormatter::getCurrencySymbol('EG', 'en');
         $this->assertEquals('LE', $symbol);
     }
+
+    /** @test */
+    public function it_can_format_currency_from_built_in_currencies()
+    {
+        // This test assumes JPY is not in the default config but is in the built-in currencies
+        $this->app['config']->set('price-formatter.currencies.JP', null);
+        
+        $formatted = PriceFormatter::format(1000, 'JP', 'en');
+        $this->assertEquals('¥1,000', $formatted);
+    }
+
+    /** @test */
+    public function it_can_get_currency_symbol_from_built_in_currencies()
+    {
+        // This test assumes JPY is not in the default config but is in the built-in currencies
+        $this->app['config']->set('price-formatter.currencies.JP', null);
+        
+        $symbol = PriceFormatter::getCurrencySymbol('JP', 'en');
+        $this->assertEquals('¥', $symbol);
+    }
+
+    /** @test */
+    public function it_can_load_custom_currencies()
+    {
+        // Create a temporary custom currencies file
+        $tempFile = sys_get_temp_dir() . '/custom_currencies.json';
+        file_put_contents($tempFile, json_encode([
+            'currencies' => [
+                'XYZ' => [
+                    'name' => 'Test Currency',
+                    'country' => 'TEST',
+                    'symbol' => [
+                        'en' => 'T$',
+                        'native' => 'T$'
+                    ]
+                ]
+            ]
+        ]));
+        
+        $this->app['config']->set('price-formatter.custom_currencies_path', $tempFile);
+        
+        $symbol = PriceFormatter::getCurrencySymbol('TEST', 'en');
+        $this->assertEquals('T$', $symbol);
+        
+        // Clean up
+        @unlink($tempFile);
+    }
+
+    /** @test */
+    public function custom_currencies_override_built_in_ones()
+    {
+        // Create a temporary custom currencies file that overrides USD
+        $tempFile = sys_get_temp_dir() . '/custom_currencies.json';
+        file_put_contents($tempFile, json_encode([
+            'currencies' => [
+                'USD' => [
+                    'name' => 'Custom Dollar',
+                    'country' => 'UNITED STATES',
+                    'symbol' => [
+                        'en' => 'USD$',
+                        'native' => 'USD$'
+                    ]
+                ]
+            ]
+        ]));
+        
+        $this->app['config']->set('price-formatter.custom_currencies_path', $tempFile);
+        
+        $symbol = PriceFormatter::getCurrencySymbol('US', 'en');
+        $this->assertEquals('USD$', $symbol);
+        
+        // Clean up
+        @unlink($tempFile);
+    }
 }

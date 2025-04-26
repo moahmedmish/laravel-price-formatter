@@ -121,4 +121,14 @@ return [
         'thousand_separator' => ',',
         'decimals' => 2,
     ],
+    
+    /*
+    |--------------------------------------------------------------------------
+    | Custom Currencies Path
+    |--------------------------------------------------------------------------
+    |
+    | Path to custom currencies configuration file that will override the defaults
+    |
+    */
+    'custom_currencies_path' => null,
 ];
