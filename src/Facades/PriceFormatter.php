@@ -1,6 +1,7 @@
 <?php
 
-namespace YourName\PriceFormatter\Facades;
+namespace MoahmedMish\PriceFormatter\Facades;
+
 
 use Illuminate\Support\Facades\Facade;
 

@@ -1,9 +1,9 @@
 <?php
 
-namespace YourName\PriceFormatter\Tests;
+namespace MoahmedMish\PriceFormatter\Tests;
 
 use Orchestra\Testbench\TestCase;
-use YourName\PriceFormatter\PriceFormatter;
+use MoahmedMish\PriceFormatter\PriceFormatter;
 
 class PriceFormatterUnitTest extends TestCase
 {
