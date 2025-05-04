@@ -5,7 +5,7 @@
     "license": "MIT",
     "authors": [
         {
-            "name": "Mohamed",
+            "name": "Mohamed Mish",
             "email": "developper.mohamed@gmail.com"
         }
     ],
@@ -38,5 +38,11 @@
         }
     },
     "minimum-stability": "dev",
-    "prefer-stable": true
+    "prefer-stable": true,
+    "keywords": ["laravel", "price", "formatter", "currency", "localization"],
+    "homepage": "https://github.com/moahmedmish/laravel-price-formatter",
+    "support": {
+        "issues": "https://github.com/moahmedmish/laravel-price-formatter/issues",
+        "source": "https://github.com/moahmedmish/laravel-price-formatter"
+    }
 }
